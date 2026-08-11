@@ -5,7 +5,7 @@
 package com.mycompany.meunegocioprojetointegrador.bd.dados.daos;
 
 import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.EntidadeEndereco;
-import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.GerenciadorDeEntidades;
+import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.gerenciamentoDeEntidades.GerenciadorDeEntidades;
 import com.mycompany.meunegocioprojetointegrador.view.IFinalizar;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,21 +20,20 @@ public class DaosEndereco implements IFinalizar{
      gerenciadorDeEntidades=g;
     }
     public List<EntidadeEndereco> getEnderecosPorCLiente(Long id){
-    var entitymanager =gerenciadorDeEntidades.getManager();
-        try {
-            var criteria=entitymanager.getCriteriaBuilder();
-            var querie=criteria.createQuery(EntidadeEndereco.class);
-            var rais=querie.from(EntidadeEndereco.class);
-            var predicado =criteria.equal(rais.get("idCliente"), id);
-            querie.select(rais).where(predicado);
-            return entitymanager.createQuery(querie).getResultList();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        } finally {
-            entitymanager.clear();
-            entitymanager.close();
-        }
+        
+    return gerenciadorDeEntidades.executar(
+        escopo->{
+            var criteria =escopo.getCriteriaBuilder();
+            var query=criteria.createQuery(EntidadeEndereco.class);
+            var raiz=query.from(EntidadeEndereco.class);
+            var predicado =criteria.equal(raiz.get("idCliente"), id);
+            query.select(raiz).where(predicado);
+            return escopo.selectList(query);
+        }, erro->{
+        erro.printStackTrace();
+        return new ArrayList<>();
+        });
+  
     }
     @Override
     public void finalizar() {

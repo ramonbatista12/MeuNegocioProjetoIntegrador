@@ -9,13 +9,15 @@ import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.EntidadeEsta
 import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.EntidadeHistoricoRequisicao;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.EntidadeProdutoSelecionado;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.EntidadeRequisicao;
-import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.GerenciadorDeEntidades;
+import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.gerenciamentoDeEntidades.GerenciadorDeEntidades;
+import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.gerenciamentoDeEntidades.IEscopoOperacoes;
 import com.mycompany.meunegocioprojetointegrador.bd.dominio.EnunEstados;
 import com.mycompany.meunegocioprojetointegrador.bd.dominio.dto.JuncaoEntidadeRequisicaoClienteEstado;
 import com.mycompany.meunegocioprojetointegrador.bd.respostas.RespostaDefault;
 import com.mycompany.meunegocioprojetointegrador.bd.respostas.ResultadoIo;
 import com.mycompany.meunegocioprojetointegrador.view.IFinalizar;
 import com.mycompany.meunegocioprojetointegrador.view.navegacao.Rotas;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,125 +34,110 @@ public class DaosEntidadeRequisicao implements IFinalizar{
    }
    
    public List<EntidadeRequisicao> listarTodasAsRequisicoes(){
-    var entityManger =gerenciadorDeEntidade.getManager();
-       try {
-           var criteria=entityManger.getCriteriaBuilder();
-           var querye= criteria.createQuery(EntidadeRequisicao.class);
-           var rais=querye.from(EntidadeRequisicao.class);
-           rais.fetch("estado", JoinType.LEFT);
-           rais.fetch("cliente", JoinType.LEFT);
-           querye.select(rais);
-           return entityManger.createQuery(querye).getResultList();
-       } catch (Exception e) {
-           e.printStackTrace();
-           return new ArrayList<>();
-       } finally {
-           entityManger.clear();
-           entityManger.close();
-       }
+    return gerenciadorDeEntidade.executar(
+            escopo->{
+            var criteria=escopo.getCriteriaBuilder();
+            var query= criteria.createQuery(EntidadeRequisicao.class);
+            var rais=query.from(EntidadeRequisicao.class);
+            rais.fetch("estado", JoinType.LEFT);
+            rais.fetch("cliente", JoinType.LEFT);
+            query.select(rais);
+            return escopo.selectList(query);
+            
+            },
+            erro->{
+            erro.printStackTrace();
+            return new ArrayList<>();
+            });
+   
    }
    public ResultadoIo<Void> salvarRequisicao(EntidadeRequisicao e,List<EntidadeProdutoSelecionado> l){
-   var entityManager = gerenciadorDeEntidade.getManager();
-       try{
-           entityManager.getTransaction().begin();
-           var estado=new EntidadeEstado();
-           estado.setId(EnunEstados.Pendendte.getId());
-           estado.setDescricao(EnunEstados.Pendendte.getDescricao());
-           e.setEstado(estado);
-           System.out.println("Estado escolhido "+estado.getId()+" decricao "+estado.getDescricao());
-           entityManager.persist(e);
-           l.forEach((p)->{
-           p.setIdRequisicao(e.getId());
-           entityManager.persist(p);
-           });
-           entityManager.getTransaction().commit();
-           return new  ResultadoIo.OK(null);
-           
-       } 
-       catch (Exception ex) {
-           ex.printStackTrace();
-           entityManager.getTransaction().rollback();
-           return new ResultadoIo.Erro(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
-       } 
-       finally {
-          entityManager.clear();
-          entityManager.close();
-       }
+   
+    return gerenciadorDeEntidade.executarEntransacao(
+            escopo->{
+            var estado=new EntidadeEstado();
+            estado.setId(EnunEstados.Pendendte.getId());
+            estado.setDescricao(EnunEstados.Pendendte.getDescricao());
+            e.setEstado(estado);
+            System.out.println("Estado escolhido "+estado.getId()+" decricao "+estado.getDescricao());
+            escopo.persist(e);
+            l.forEach((p)->{
+            p.setIdRequisicao(e.getId());
+            escopo.persist(p);});
+            return new  ResultadoIo.OK(null);
+            },
+            erro->{
+            erro.printStackTrace();
+            return new ResultadoIo.Erro(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
+       
+            });
+       
    }
    
    public ResultadoIo<Void> updateRequisicao(EntidadeRequisicao e){
-     var entityManager = gerenciadorDeEntidade.getManager();
-       try {
-           entityManager.getTransaction().begin();
-           entityManager.merge(e);
-           entityManager.getTransaction().commit();
-           System.out.println("update ocoreu");
-           return new  ResultadoIo.OK(null);
-           
-       } catch (Exception ex) {
-           ex.printStackTrace();
-           entityManager.getTransaction().rollback();
-           return new ResultadoIo.Erro(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
-       } finally {
-          entityManager.clear();
-          entityManager.close();
-       }
+    
+    return gerenciadorDeEntidade.executarEntransacao(
+            escopo->{
+            escopo.merge(e);
+            System.out.println("update ocoreu");
+            return new  ResultadoIo.OK(null);
+            },
+            erro->{ 
+            erro.printStackTrace();
+            return new ResultadoIo.Erro(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
+       
+            });
+    
    }
    
-   public ResultadoIo<Void> updateRequisicao(EntidadeRequisicao e,List<EntidadeProdutoSelecionado>l){
-     var entityManager = gerenciadorDeEntidade.getManager();
-       try {
-           entityManager.getTransaction().begin();
-           var criteriaBuilder= entityManager.getCriteriaBuilder();
-           var querieDelete =criteriaBuilder.createCriteriaDelete(EntidadeProdutoSelecionado.class);
-           var raiz =querieDelete.from(EntidadeProdutoSelecionado.class);
-           var predicado=criteriaBuilder.equal(raiz.get("idRequisicao"),e.getId());
-           querieDelete.where(predicado);
-           var linhas =entityManager.createQuery(querieDelete).executeUpdate();
+   public ResultadoIo<Void> updateRequisicao(EntidadeRequisicao entidadeRequisicao,List<EntidadeProdutoSelecionado>listaEntidadeProduto){
+    
+    return gerenciadorDeEntidade.executarEntransacao(escopo->{
+            var criteriaBuilder= escopo.getCriteriaBuilder();
+            var queryDelete =criteriaBuilder.createCriteriaDelete(EntidadeProdutoSelecionado.class);
+            var raiz =queryDelete.from(EntidadeProdutoSelecionado.class);
+            var predicado=criteriaBuilder.equal(raiz.get("idRequisicao"),entidadeRequisicao.getId());
+            queryDelete.where(predicado);
+            escopo.deletCriteria(queryDelete );
+            escopo.merge(entidadeRequisicao);
+            listaEntidadeProduto.forEach((p)->{
+                       p.setId(null);
+                       p.setIdRequisicao(entidadeRequisicao.getId());
+                       System.out.println("o id setado em p "+entidadeRequisicao.getId());
+                       escopo.merge(p);});
            
-           entityManager.merge(e);
-           l.forEach((p)->{
-           p.setId(null);
-           p.setIdRequisicao(e.getId());
-               System.out.println("o id setado em p "+e.getId());
-           entityManager.merge(p);
-           });
-           entityManager.getTransaction().commit();
-           return new  ResultadoIo.OK(null);
-           
-       } catch (Exception ex) {
-           ex.printStackTrace();
-           entityManager.getTransaction().rollback();
-           return new ResultadoIo.Erro(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
-       } finally {
-          entityManager.clear();
-          entityManager.close();
-       }
-   
+           return new  ResultadoIo.OK(null);   
+            },
+            erro->{ 
+            erro.printStackTrace();
+            return new ResultadoIo.Erro(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
+            });
+      
    
    }
    
    public ResultadoIo<EntidadeRequisicao> requisicaoPorId(Long id){
-         var entityManger =gerenciadorDeEntidade.getManager();
-       try {
-           var criteria=entityManger.getCriteriaBuilder();
-           var querye= criteria.createQuery(EntidadeRequisicao.class);
-           var rais=querye.from(EntidadeRequisicao.class);
-           rais.fetch("estado", JoinType.LEFT);
-           rais.fetch("cliente", JoinType.LEFT);
-           var presicado=criteria.equal(rais.get("id"),id);
-           querye.select(rais).where(presicado);
-           var resultado =entityManger.createQuery(querye).getSingleResultOrNull();
-          if(resultado!=null)return new ResultadoIo.OK<>(resultado);
-           return new ResultadoIo.Erro<>(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
-       } catch (Exception e) {
-           e.printStackTrace();
-           return new ResultadoIo.Erro<>(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
-       } finally {
-           entityManger.clear();
-           entityManger.close();
-       }
-   
+       
+    return gerenciadorDeEntidade.executar(
+            escopo->{
+            var criteria=escopo.getCriteriaBuilder();
+            var query= criteria.createQuery(EntidadeRequisicao.class);
+            var rais=query.from(EntidadeRequisicao.class);
+            rais.fetch("estado", JoinType.LEFT);
+            rais.fetch("cliente", JoinType.LEFT);
+            var presicado=criteria.equal(rais.get("id"),id);
+            query.select(rais).where(presicado);
+            var resultado = escopo.selectResultadoUnico( query);
+            if(resultado!=null)return new ResultadoIo.OK<>(resultado);   
+            return new ResultadoIo.Erro<>(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
+      
+            },
+            erro->{
+            erro.printStackTrace();
+            return new ResultadoIo.Erro<>(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
+       
+            });
+        
    }
    
    public List<EntidadeRequisicao> requisicoesPorCliente(String nome){
@@ -181,91 +168,90 @@ public class DaosEntidadeRequisicao implements IFinalizar{
    }
    
    public List<EntidadeRequisicao> requisicaoPorEstado(String estado){
-      var entitimanager = gerenciadorDeEntidade.getManager();
-       try {
-           var criteria =entitimanager.getCriteriaBuilder();
-           var querye =criteria.createQuery(EntidadeRequisicao.class);
-           var raiz =querye.from(EntidadeRequisicao.class);
-           raiz.fetch("estado", JoinType.LEFT);
-           raiz.fetch("cliente", JoinType.LEFT);
-           var join =raiz.join("estado",JoinType.LEFT);
-           var predicado=criteria.like(join.get("descricao"),"%"+estado+"%");
-           querye.select(raiz).where(predicado);
-           return entitimanager.createQuery(querye).getResultList();
-           
-       } 
-       catch (Exception e) {
-           e.printStackTrace();
-           return new ArrayList<>();
-       } 
-       finally {
-           entitimanager.clear();
-           entitimanager.close();
-           
-       }
+    return gerenciadorDeEntidade.executar(
+            escopo->{
+            var criteria =escopo.getCriteriaBuilder();
+            var query =criteria.createQuery(EntidadeRequisicao.class);
+            var raiz =query.from(EntidadeRequisicao.class);
+            raiz.fetch("estado", JoinType.LEFT);
+            raiz.fetch("cliente", JoinType.LEFT);
+            var join =raiz.join("estado",JoinType.LEFT);
+            var predicado=criteria.like(join.get("descricao"),"%"+estado+"%");
+            query.select(raiz).where(predicado);
+            return escopo.selectList(query);    
+            },
+            erro->{
+            erro.printStackTrace();
+            return new ArrayList<>();    
+            });
+     
    }
    
    public List<EntidadeRequisicao> listarequisicaoPorId(Long id){
-      var entitimanager = gerenciadorDeEntidade.getManager();
-       try {
-           var criteria =entitimanager.getCriteriaBuilder();
-           var querye =criteria.createQuery(EntidadeRequisicao.class);
-           var raiz =querye.from(EntidadeRequisicao.class);
-           raiz.fetch("estado", JoinType.LEFT);
-           raiz.fetch("cliente", JoinType.LEFT);
-           var predicado =criteria.equal(raiz.get("id"), id);
-           querye.select(raiz).where(predicado);
-           return entitimanager.createQuery(querye).getResultList();
-           
-       } 
-       catch (Exception e) {
-           e.printStackTrace();
-           return new ArrayList<>();
-       } 
-       finally {
-           entitimanager.clear();
-           entitimanager.close();
-           
-       }
-   
+    return gerenciadorDeEntidade.executar(
+            escopo->{
+            var criteria =escopo.getCriteriaBuilder();
+            var query =criteria.createQuery(EntidadeRequisicao.class);
+            var raiz =query.from(EntidadeRequisicao.class);
+            raiz.fetch("estado", JoinType.LEFT);
+            raiz.fetch("cliente", JoinType.LEFT);
+            var predicado =criteria.equal(raiz.get("id"), id);
+            query.select(raiz).where(predicado);
+            return escopo.selectList( query);
+            },
+            erro->{
+            erro.printStackTrace();
+            return new ArrayList<>();
+            });
+      
+    
    
    }
    
    public ResultadoIo<Void> excluirRequisicao(EntidadeRequisicao e){
-   var entitimanager =gerenciadorDeEntidade.getManager();
-       try {
-           entitimanager.getTransaction().begin();
-           var criteria=entitimanager.getCriteriaBuilder();
-           var criteriaDelete1=criteria.createCriteriaDelete(EntidadeHistoricoRequisicao.class);
-           var raiz1=criteriaDelete1.from(EntidadeHistoricoRequisicao.class);
-           var predicado1=criteria.equal(raiz1.get("idRequisicao"),e.getId());
-           criteriaDelete1.where(predicado1);
-           entitimanager.createQuery(criteriaDelete1).executeUpdate();
+    return gerenciadorDeEntidade.executarEntransacao(
+            escopo->{
+            this.excluirHistoricoDeRequisicao(escopo,e.getId());
+            this.excluirProdutosRequisitados(escopo,e.getId());
+            this.excluirRequisicao(escopo,e.getId());
+            return new ResultadoIo.OK<>(null);
+            }, 
+            erro->{
+            erro.printStackTrace();
+            return new ResultadoIo.Erro<>(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
+            });
+   
+   }
+   
+   private void excluirHistoricoDeRequisicao(IEscopoOperacoes escopo,Long id){
+           var criteria=escopo.getCriteriaBuilder();
+           var criteriaDelete=criteria.createCriteriaDelete(EntidadeHistoricoRequisicao.class);
+           var raiz1=criteriaDelete.from(EntidadeHistoricoRequisicao.class);
+           var predicado1=criteria.equal(raiz1.get("idRequisicao"),id);
+           criteriaDelete.where(predicado1);
+           escopo.deletCriteria(criteriaDelete);
+       
+   }
+   
+   private void excluirProdutosRequisitados(IEscopoOperacoes escopo,Long id){ 
+           var criteria=escopo.getCriteriaBuilder();
+           var criteriaDelete=criteria.createCriteriaDelete(EntidadeProdutoSelecionado.class);
+           var raiz=criteriaDelete.from(EntidadeProdutoSelecionado.class);
+           var predicado=criteria.equal(raiz.get("idRequisicao"), id);
+           criteriaDelete.where(predicado);
+           escopo.deletCriteria(criteriaDelete);
            
-          
+   }
+   
+   private void excluirRequisicao(IEscopoOperacoes escopo,Long id){
+           var criteria=escopo.getCriteriaBuilder();
+           var criteriaDelete=criteria.createCriteriaDelete(EntidadeRequisicao.class);
+           var raiz=criteriaDelete.from(EntidadeRequisicao.class);
+           var predicado=criteria.equal(raiz.get("id"),id);
+           criteriaDelete.where(predicado);
+           escopo.deletCriteria(criteriaDelete);
            
-           var criteriaDelete2=criteria.createCriteriaDelete(EntidadeProdutoSelecionado.class);
-           var raiz2=criteriaDelete2.from(EntidadeProdutoSelecionado.class);
-           var predicado2=criteria.equal(raiz2.get("idRequisicao"), e.getId());
-           criteriaDelete2.where(predicado2);
-           entitimanager.createQuery(criteriaDelete2).executeUpdate();
-           
-           var criteriaDelete3=criteria.createCriteriaDelete(EntidadeRequisicao.class);
-           var raiz3=criteriaDelete3.from(EntidadeRequisicao.class);
-           var predicado3=criteria.equal(raiz3.get("id"),e.getId());
-           criteriaDelete3.where(predicado3);
-           entitimanager.createQuery(criteriaDelete3).executeUpdate();
-           
-           entitimanager.getTransaction().commit();
-           return new ResultadoIo.OK<>(null);
-       } catch (Exception ex) {
-           ex.printStackTrace();
-           entitimanager.getTransaction().rollback();
-           return new ResultadoIo.Erro<>(RespostaDefault.OperacaoNaoComcluida.getMenssagen());
-       } finally {
-           entitimanager.clear();
-           entitimanager.close();
-       }
+   
    }
     @Override
     public void finalizar() {

@@ -4,7 +4,7 @@
  */
 package com.mycompany.meunegocioprojetointegrador.view.controles;
 
-import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.GerenciadorDeEntidades;
+import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.gerenciamentoDeEntidades.GerenciadorDeEntidades;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.repositorio.Repositorio;
 import com.mycompany.meunegocioprojetointegrador.bd.dominio.Cliente;
 import com.mycompany.meunegocioprojetointegrador.bd.dominio.DadosDoCliente;

@@ -7,7 +7,7 @@ package com.mycompany.meunegocioprojetointegrador;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
-import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.GerenciadorDeEntidades;
+import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.gerenciamentoDeEntidades.GerenciadorDeEntidades;
 import com.mycompany.meunegocioprojetointegrador.view.FramePrincipal;
 
 import javax.swing.JFrame;

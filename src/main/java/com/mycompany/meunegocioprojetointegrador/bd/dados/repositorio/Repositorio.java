@@ -14,7 +14,7 @@ import com.mycompany.meunegocioprojetointegrador.bd.dados.daos.DaosHistoricoDeMu
 import com.mycompany.meunegocioprojetointegrador.bd.dados.daos.DaosTelefone;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.EntidadeProdutoServico;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.EntidadeRequisicao;
-import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.GerenciadorDeEntidades;
+import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.gerenciamentoDeEntidades.GerenciadorDeEntidades;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.repositorio.mapeadores.MapeadorEntidadeEnderecos;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.repositorio.mapeadores.MapeadorEntidadeHistoricoRequisicao;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.repositorio.mapeadores.MapeadorEntidadeProdutoSelecionado;

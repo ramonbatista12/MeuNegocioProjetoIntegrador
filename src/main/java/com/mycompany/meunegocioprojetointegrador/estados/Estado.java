@@ -8,6 +8,7 @@ import com.mycompany.meunegocioprojetointegrador.view.navegacao.GerenciadorDepai
 import com.mycompany.meunegocioprojetointegrador.view.navegacao.GerenciadorDepaineis.Painel;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JFrame;
 
@@ -27,7 +28,7 @@ public class Estado<T> {
     }
     
     public synchronized  void observar(IComsumir c,JFrame f){
-     var observador = new Observador(c);
+     var observador = new Observador(c, new WeakReference<>(f));
      observador.notificar(estado.get());
      observadores.adicionarObservador(observador);
      f.addWindowListener(new WindowAdapter(){
@@ -40,7 +41,7 @@ public class Estado<T> {
      }
     
     public synchronized void observar(IComsumir c,Painel p){
-     var observador = new Observador(c);
+     var observador = new Observador(c, new WeakReference<>(p));
      observador.notificar(estado.get());
      observadores.adicionarObservador(observador);
      p.registraObservadores(new IObservadorDosicloDeVida(){

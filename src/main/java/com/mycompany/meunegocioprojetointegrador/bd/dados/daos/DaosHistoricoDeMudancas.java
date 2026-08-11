@@ -5,7 +5,7 @@
 package com.mycompany.meunegocioprojetointegrador.bd.dados.daos;
 
 import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.EntidadeHistoricoRequisicao;
-import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.GerenciadorDeEntidades;
+import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.gerenciamentoDeEntidades.GerenciadorDeEntidades;
 import com.mycompany.meunegocioprojetointegrador.view.IFinalizar;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,22 +21,20 @@ public class DaosHistoricoDeMudancas implements IFinalizar{
     gerenciadorDeEntidades=g;
     }
     public List<EntidadeHistoricoRequisicao> listarHistorico(Long idRequisicao){
-     var entitimanager =gerenciadorDeEntidades.getManager();
-        try {
-            System.out.println("id pasado "+idRequisicao);
-            var criteria =entitimanager.getCriteriaBuilder();
-            var querye =criteria.createQuery(EntidadeHistoricoRequisicao.class);
-            var raiz =querye.from(EntidadeHistoricoRequisicao.class);
+    return gerenciadorDeEntidades.executar(
+            escopo->{
+            var criteria =escopo.getCriteriaBuilder();
+            var query =criteria.createQuery(EntidadeHistoricoRequisicao.class);
+            var raiz =query.from(EntidadeHistoricoRequisicao.class);
             var predicado =criteria.equal(raiz.get("idRequisicao"),idRequisicao);
-            querye.select(raiz).where(predicado);
-            return entitimanager.createQuery(querye).getResultList();
-        } catch (Exception e) {
-            e.printStackTrace();
+            query.select(raiz).where(predicado);
+            return escopo.selectList(query);
+            }, 
+            erro->{
+            erro.printStackTrace();
             return new ArrayList<>();
-        } finally {
-            entitimanager.clear();
-            entitimanager.close();
-        }
+            });
+     
     }
 
     @Override

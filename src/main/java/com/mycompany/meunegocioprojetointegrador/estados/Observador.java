@@ -5,6 +5,7 @@
 package com.mycompany.meunegocioprojetointegrador.estados;
 
 import java.awt.EventQueue;
+import java.lang.ref.WeakReference;
 
 /**
  *
@@ -12,18 +13,32 @@ import java.awt.EventQueue;
  */
 public class Observador<T> {
     private IComsumir<T> comsumir;
-    
-    public Observador(IComsumir c){
-    this.comsumir=c;
+    private WeakReference<Object> objetoNotificavel;
+    private WeakReference<IComsumir<T>> referenciaFracaConsumir;
+    public Observador(IComsumir c,WeakReference<Object> referenciaFraca){
+    referenciaFracaConsumir=new WeakReference<>(c);
+    comsumir=c;
+    this.objetoNotificavel=referenciaFraca;
     }
     
     public void notificar(T valor){
+        
+        System.err.println("Agendando notificacap na evt");
         EventQueue.invokeLater(()->{
+            System.err.println("Notificacao disparada checando valores ");
             try {
-                if(comsumir!=null){
-                    comsumir.comsumir(valor);
-                }else System.out.println("A notificao nao pode ser trasmitida notificacao morta ");
-                
+               var objetoNotificavelAux=objetoNotificavel.get();
+               if(objetoNotificavelAux!=null){
+                   System.err.println("Notificador esta visivel");
+                var refererwenciaConsumirAux=referenciaFracaConsumir.get();
+                if(refererwenciaConsumirAux!=null){
+                    System.err.println("A funcao esta disponivel vou notificar");
+                    refererwenciaConsumirAux.comsumir(valor);}
+               }
+               else{
+                   comsumir=null;
+                   System.err.println("A funcao nao esta disponivel");
+               }
             } catch (Exception e) {
                 e.printStackTrace();
             }

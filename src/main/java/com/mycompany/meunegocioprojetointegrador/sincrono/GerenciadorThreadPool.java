@@ -18,16 +18,20 @@ import java.util.function.Supplier;
  */
 public class GerenciadorThreadPool implements IFinalizar{
     private static GerenciadorThreadPool instancai;
+    private static Object lock= new Object();
     private int numeroDeNucleos =Runtime.getRuntime().availableProcessors();
     private ExecutorService executorIo = Executors.newCachedThreadPool();
     private ScheduledExecutorService executorAgendavel = Executors.newScheduledThreadPool(((numeroDeNucleos/2)==0)?2:(numeroDeNucleos/2));
     private ExecutorService defaut=Executors.newFixedThreadPool(numeroDeNucleos);
     private GerenciadorThreadPool(){}
     public static GerenciadorThreadPool getInstance(){
-     if(instancai==null) instancai=new GerenciadorThreadPool();
-    return instancai;
+        synchronized(lock){
+                 if(instancai==null) instancai=new GerenciadorThreadPool();
+                 return instancai;
+        }
     }
     public<T> CompletableFuture<T> submeterPoolIO(Supplier s){
+        
         System.err.println("nova tarefa submetida");    
     return CompletableFuture.supplyAsync(s,executorIo);
     }
@@ -38,13 +42,15 @@ public class GerenciadorThreadPool implements IFinalizar{
     
     @Override
     public void finalizar() {
-     executorAgendavel.shutdownNow();
-     executorIo.shutdownNow();
-     defaut.shutdownNow();
-     executorIo=null;
-     executorAgendavel=null;
-     defaut=null;
-     instancai=null;
+        synchronized (lock) {
+              executorAgendavel.shutdownNow();
+              executorIo.shutdownNow();
+              defaut.shutdownNow();
+              executorIo=null;
+              executorAgendavel=null;
+              defaut=null;
+              instancai=null;}   
+     
     }
     
 }

@@ -4,7 +4,7 @@
  */
 package com.mycompany.meunegocioprojetointegrador.view.controles;
 
-import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.GerenciadorDeEntidades;
+import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.gerenciamentoDeEntidades.GerenciadorDeEntidades;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.repositorio.Repositorio;
 import com.mycompany.meunegocioprojetointegrador.bd.dados.repositorio.mapeadores.PesquisaRequisicoes;
 import com.mycompany.meunegocioprojetointegrador.bd.dominio.DadosDaRequisicao;
@@ -38,7 +38,13 @@ public class ControleRequisicoes implements IFinalizar{
      ex.printStackTrace();
      return new ArrayList<>();
     });
-    futuro.thenAccept((l)->estadoDaLista.notificar((List<DadosDaRequisicao>) l));
+    futuro.thenAcceptAsync((l)->{
+        System.err.println("Caregamento da lista comcluido");
+        try {
+            Thread.sleep(10000);
+        } catch (Exception e) {
+        }
+        estadoDaLista.notificar((List<DadosDaRequisicao>) l);});
             
     }
     public Estado<List<DadosDaRequisicao>> getEstadoDaLista(){return estadoDaLista;}

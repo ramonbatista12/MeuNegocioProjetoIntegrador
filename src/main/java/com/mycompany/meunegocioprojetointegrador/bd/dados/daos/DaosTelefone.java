@@ -5,7 +5,7 @@
 package com.mycompany.meunegocioprojetointegrador.bd.dados.daos;
 
 import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.EntidadeTelefone;
-import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.GerenciadorDeEntidades;
+import com.mycompany.meunegocioprojetointegrador.bd.dados.entidades.gerenciamentoDeEntidades.GerenciadorDeEntidades;
 import com.mycompany.meunegocioprojetointegrador.view.IFinalizar;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,21 +22,21 @@ public class DaosTelefone implements IFinalizar{
    }
    
    public List<EntidadeTelefone> getTelefonesPorCliente(Long idCLiente){
-    var entityManager = gerenciadorDeEntidades.getManager();
-       try {
-           var criteria =entityManager.getCriteriaBuilder();
-           var querie= criteria.createQuery(EntidadeTelefone.class);
-           var rais = querie.from(EntidadeTelefone.class);
-           var predicado =criteria.equal(rais.get("idCliente"),idCLiente);
-           querie.select(rais).where(predicado);
-           return entityManager.createQuery(querie).getResultList();
-       } catch (Exception e) {
-           e.printStackTrace();
-           return  new ArrayList<>();
-       }finally{
-        entityManager.clear();
-        entityManager.close();
-       }
+    return gerenciadorDeEntidades.executar(
+            escopo->{
+            var criteria =escopo.getCriteriaBuilder();
+            var query= criteria.createQuery(EntidadeTelefone.class);
+            var rais = query.from(EntidadeTelefone.class);
+            var predicado =criteria.equal(rais.get("idCliente"),idCLiente);
+            query.select(rais).where(predicado);
+            return escopo.selectList(query);
+            
+            },
+            erro->{
+            erro.printStackTrace();
+            return  new ArrayList<>();
+            });
+    
    }
 
     @Override

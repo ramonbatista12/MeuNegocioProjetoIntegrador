@@ -24,12 +24,13 @@ public class ValidadorCliente {
     if(!cpf.matches("\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}")){objeto= new Invalido("CPF no formato inválido");return;}
    cpfVasio=false;
    }
-   if(!cnpjVasio&&!cnpjVasio){objeto= new Invalido("E presiso que pelomenos um docuemnto seja preenchido");return;}
+   if(cnpjVasio&&cpfVasio){objeto= new Invalido("E presiso que pelomenos um docuemnto seja preenchido");return;}
    objeto= new Valido();
    }
    private boolean  validarMascar(String s){
     var string =s.replaceAll("\\D","");
     if(string.isBlank())return true;
+    
     return false;
    }
    public boolean invalido(){
